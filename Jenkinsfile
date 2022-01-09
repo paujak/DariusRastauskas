@@ -5,7 +5,12 @@ pipeline {
     ecrcredentials = ""
     dockerImage = ''
   } 
-  agent any
+  gent {
+        node {
+            label 'jenkins-engine-agent-t3medium'
+        }
+  }
+
   stages {
     stage('Cloning Git') {
       steps {
