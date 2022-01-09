@@ -5,7 +5,7 @@ pipeline {
     ecrcredentials = ""
     dockerImage = ''
   } 
-  gent {
+  agent {
         node {
             label 'jenkins-engine-agent-t3medium'
         }
