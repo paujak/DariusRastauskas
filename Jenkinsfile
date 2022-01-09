@@ -1,29 +1,55 @@
 pipeline {
-    agent {
-        node {
-            label 'jenkins-engine-agent-t3medium'
+  environment {
+    imagename = "ismailtest"
+    ecrurl = "https://hub.docker.com/repository/docker/dariusrastauskas/dariusdockerrepo"
+    ecrcredentials = ""
+    dockerImage = ''
+  } 
+  agent any
+  stages {
+    stage('Cloning Git') {
+      steps {
+                git([url: 'https://github.com/DariusRastauskas/DariusRastauskas.git', branch: 'main'])
+
+      }
+    }
+    stage('Building image') {
+      steps{
+        script {
+          dockerImage = docker.build imagename
         }
-        
+      }
+    }
+   
+stage('Deploy Master Image') {
+   when {
+      anyOf {
+            branch 'main'
+      }
+     }
+      steps{
+        script {
+          docker.withRegistry(ecrurl, ecrcredentials) {     
+            dockerImage.push("$BUILD_NUMBER")
+             dockerImage.push('latest')
+
+          }
+        }
+      }
     }
 
-    stage('Clone repository') {
-        steps {
-            checkout scm
-        }
-    }
+ 
+    stage('Remove Unused docker image - Master') {
+      when {
+      anyOf {
+            branch 'main'
+      }
+     }
+      steps{
+        sh "docker rmi $imagename:$BUILD_NUMBER"
+         sh "docker rmi $imagename:latest"
 
-    stage('Build Image'){
-        steps {
-            app = docker.build("TestImage4darius")
-        }
-
-    }
-
-    stage('Test image'){
-        steps {
-            app.inside {
-                echo "Tests passed"
-            }
-        }
-    }
-}
+      }
+    } // End of remove unused docker image for master
+  }  
+} //end of pipeline
